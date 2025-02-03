@@ -1,0 +1,83 @@
+1. Написать xslt-преобразование, которое на основе входящего файла Groups.xml построит файл List.xml (смотри приложенные файлы)
+
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+    <xsl:output method="xml" indent="yes"/>
+    <xsl:template match="/">
+        <list>
+            <xsl:apply-templates select="//item"/>
+        </list>
+    </xsl:template>
+    <xsl:template match="item">
+        <item name="{@name}" group="{../../@name}"/>
+    </xsl:template>
+</xsl:stylesheet>
+
+2. Написать xslt-преобразование, которое на основе входящего файла List.xml построит файл Groups.xml (смотри приложенные файлы)
+
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+    <xsl:output method="xml" indent="yes"/>
+    <xsl:key name="items-by-group" match="item" use="@group"/>
+    <xsl:template match="/">
+        <groups>
+            <xsl:for-each select="//item[generate-id() = generate-id(key('items-by-group', @group)[1])]">
+                <xsl:sort select="@group" data-type="number"/>  <!-- Сортируем группы по возрастанию -->
+                <group name="{@group}">
+                    <xsl:for-each select="key('items-by-group', @group)">
+                        <xsl:sort select="@name" data-type="number"/>
+                        <item name="{@name}"/>
+                    </xsl:for-each>
+                </group>
+            </xsl:for-each>
+        </groups>
+    </xsl:template>
+</xsl:stylesheet>
+
+3.Написать xslt-преобразование, которое на основе входящего файла Tree.xml построит файл Flat.txt - пути всех элементов в плоском виде через слэш (смотри приложенные файлы)
+
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+    <xsl:output method="text" indent="no"/>
+    <xsl:template match="/">
+        <xsl:text>0
+</xsl:text>
+        <xsl:apply-templates/>
+    </xsl:template>
+    <xsl:template match="node">
+        <xsl:variable name="path">
+            <xsl:if test="parent::*">
+                <xsl:value-of select="concat(parent::node/@name,'/')"/>
+            </xsl:if>
+            <xsl:value-of select="@name"/>
+        </xsl:variable>       
+        <xsl:value-of select="$path"/>
+        <xsl:text>
+</xsl:text>      
+        <xsl:apply-templates/>
+    </xsl:template>
+</xsl:stylesheet>
+
+4. Написать именованный xslt шаблон, который принимает целое неотрицательное число M, а на выходе возвращает строку из чисел от 0 до M через пробел
+
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+    <xsl:template name="numbers-from-zero-to-M">
+        <xsl:param name="M"/>
+        <xsl:if test="$M > 0">
+            <xsl:call-template name="numbers-from-zero-to-M">
+                <xsl:with-param name="M" select="$M - 1"/>
+            </xsl:call-template>
+            <xsl:text> </xsl:text>
+            <xsl:value-of select="$M - 1"/>
+        </xsl:if>
+    </xsl:template>
+    <xsl:template match="/">
+        <xsl:param name="M"/>
+        <xsl:call-template name="numbers-from-zero-to-M">
+            <xsl:with-param name="M" select="$M"/>
+        </xsl:call-template>
+        <xsl:text> </xsl:text>
+        <xsl:value-of select="$M"/>
+    </xsl:template>
+</xsl:stylesheet>
